@@ -1,8 +1,8 @@
-; FUNÇÃO PASSA_BAIXA.ASM
+; FUNÇÃO MEDIA.ASM
 ;
 ; ======= CHAMADA =======
-; void pdi_passa_baixa(const uint8_t *src, int largura, int altura, int canais,
-;                      uint8_t *dst)
+; void pdi_media(const uint8_t *src, int largura, int altura, int canais,
+;                uint8_t *dst)
 ;
 ;
 ; ====== REGISTERS ======
@@ -26,7 +26,8 @@
 ;
 ; ===== OBSERVAÇÕES =====
 ;
-; Filtro da média: cada pixel vira a média dos 9 pixels da janela 3x3.
+; Filtro passa-baixa da média: cada pixel vira a média dos 9 pixels da
+; janela 3x3.
 ; Efeito: suaviza (borra) a imagem e reduz ruído.
 ; Alinhamento: na entrada rsp termina em 8 (mod 16); 8 - 8 = múltiplo de 16.
 
@@ -39,10 +40,10 @@ MASCARA:     dd 1, 1, 1         ; todos os vizinhos pesam igual:
 
 section .text
 
-global pdi_passa_baixa:function ; exporta a função para o Python
+global pdi_media:function       ; exporta a função para o Python
 extern pdi_convolucao           ; suporte/convolucao.asm
 
-pdi_passa_baixa:
+pdi_media:
     sub   rsp, 8                ; reserva espaço para o 7º argumento e alinha a pilha em 16
     mov   dword [rsp], 9        ; 7º argumento: divide por 9, a quantidade de pixels da janela
     lea   r9, [MASCARA]         ; 6º argumento: endereço da máscara de uns

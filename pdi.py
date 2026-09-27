@@ -46,8 +46,12 @@ def _declarar(nome, *extras):
 _grayscale = _declarar("pdi_grayscale")
 _brilho_contraste = _declarar("pdi_brilho_contraste", _DOUBLE, _DOUBLE)
 _threshold = _declarar("pdi_threshold", _INT)
-_passa_baixa = _declarar("pdi_passa_baixa")
+_media = _declarar("pdi_media")
+_moda = _declarar("pdi_moda")
+_mediana = _declarar("pdi_mediana")
+_gaussiano = _declarar("pdi_gaussiano")
 _passa_alta = _declarar("pdi_passa_alta")
+_roberts = _declarar("pdi_roberts", _INT)
 _sobel = _declarar("pdi_sobel", _INT)
 _transladar = _declarar("pdi_transladar", _INT, _INT)
 _rotacionar = _declarar("pdi_rotacionar", _DOUBLE)
@@ -85,12 +89,28 @@ def threshold(img, limiar):
     return _executar(_threshold, img, 1, limiar)
 
 
-def passa_baixa(img):
-    return _executar(_passa_baixa, img, img.canais)
+def media(img):
+    return _executar(_media, img, img.canais)
+
+
+def moda(img):
+    return _executar(_moda, img, img.canais)
+
+
+def mediana(img):
+    return _executar(_mediana, img, img.canais)
+
+
+def gaussiano(img):
+    return _executar(_gaussiano, img, img.canais)
 
 
 def passa_alta(img):
     return _executar(_passa_alta, img, img.canais)
+
+
+def roberts(img, limiar):
+    return _executar(_roberts, img, 1, limiar)
 
 
 def sobel(img, limiar):

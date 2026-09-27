@@ -129,9 +129,14 @@ class Aplicacao:
                 pdi.brilho_contraste,
                 (REAL, "Contraste C (1 = sem alteração):", 0, 10),
                 (REAL, "Brilho B (0 = sem alteração):", -255, 255))),
-            ("Passa Baixa (média 3x3)", lambda: aplicar(pdi.passa_baixa)),
+            ("Passa Baixa (Média)", lambda: aplicar(pdi.media)),
+            ("Passa Baixa (Moda)", lambda: aplicar(pdi.moda)),
+            ("Passa Baixa (Mediana)", lambda: aplicar(pdi.mediana)),
+            ("Passa Baixa (Gaussiano)", lambda: aplicar(pdi.gaussiano)),
             ("Passa Alta", lambda: aplicar(pdi.passa_alta)),
             ("Threshold...", lambda: aplicar(pdi.threshold, (INTEIRO, "Limiar T (0 a 255):", 0, 255))),
+            ("Detecção de Bordas (Roberts)...", lambda: aplicar(
+                pdi.roberts, (INTEIRO, "Limiar (é borda se G > limiar):", 0, 360))),
             ("Detecção de Bordas (Sobel)...", lambda: aplicar(
                 pdi.sobel, (INTEIRO, "Limiar (é borda se G > limiar):", 0, 1500))),
         ])

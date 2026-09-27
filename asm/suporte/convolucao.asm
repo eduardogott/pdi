@@ -48,7 +48,7 @@
 ; Cada canal (R, G, B ou cinza) é filtrado separadamente. Os vizinhos do mesmo
 ; canal ficam a 'canais' bytes de distância na horizontal e a
 ; 'largura * canais' bytes na vertical.
-; Usada por passa_baixa.asm e passa_alta.asm.
+; Usada por media.asm, gaussiano.asm e passa_alta.asm.
 
 %include "comum.inc"
 

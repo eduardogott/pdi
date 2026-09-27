@@ -41,7 +41,7 @@ python3 main.py
 |------|--------|
 | Arquivo | Abrir imagem, Salvar imagem, Sobre, Sair |
 | Transformações Geométricas | Transladar, Rotacionar, Espelhar (horizontal e vertical), Aumentar, Diminuir |
-| Filtros | Grayscale, Brilho e Contraste, Passa Baixa (média 3x3), Passa Alta, Threshold, Detecção de Bordas (Sobel) |
+| Filtros | Grayscale, Brilho e Contraste, Passa Baixa (Média, Moda, Mediana e Gaussiano), Passa Alta, Threshold, Detecção de Bordas (Roberts e Sobel) |
 | Morfologia Matemática | Dilatação, Erosão, Abertura, Fechamento, Afinamento (próximas entregas) |
 | Extração de Características | Desafio (a definir) |
 
@@ -56,10 +56,12 @@ pdi.py             carrega lib/libpdi.so e declara as funções
 compilar.sh        nasm + ld  ->  lib/libpdi.so
 asm/
   comum.inc        resumo da convenção System V e macro SATURAR
-  filtros/         grayscale, contraste, threshold, passa_baixa, passa_alta, sobel
+  filtros/         grayscale, contraste, media, moda, mediana, gaussiano,
+                   passa_alta, threshold, roberts, sobel
   geometria/       transladar, rotacionar, espelhar, aumentar, diminuir
   suporte/         matriz_transformacao (usada pela geometria),
-                   convolucao 3x3 (passa-baixa e passa-alta),
+                   convolucao 3x3 (média, gaussiano e passa-alta),
+                   janela 3x3 (moda e mediana),
                    memoria (buffer temporário do Sobel)
 ```
 
@@ -76,7 +78,20 @@ faz e para quê.
   Cada operação monta a matriz inversa e chama `suporte/matriz_transformacao.asm`.
   A rotação gira em torno do centro (ângulo positivo = sentido horário) e
   mantém o tamanho da imagem.
-- **Passa baixa e passa alta:** convolução 3x3 em cada canal; a moldura de
+- **Passa baixa e passa alta:** janela 3x3 em cada canal; a moldura de
   1 pixel mantém o valor original.
-- **Threshold e Sobel:** imagens RGB são convertidas para cinza antes, e o
-  resultado tem 1 canal. No Sobel, é borda onde `√(Gx² + Gy²) > limiar`.
+  - **Média:** média dos 9 pixels (máscara de uns, dividida por 9).
+  - **Moda:** o valor que mais se repete na janela; se nenhum se repete,
+    mantém o pixel central.
+  - **Mediana:** ordena os 9 valores e pega o do meio.
+  - **Gaussiano:** máscara `[1 2 1; 2 4 2; 1 2 1]`, dividida por 16.
+  - **Passa alta:** máscara `[-1 -1 -1; -1 8 -1; -1 -1 -1]`.
+- **Threshold, Roberts e Sobel:** imagens RGB são convertidas para cinza
+  antes, e o resultado tem 1 canal.
+- **Detecção de bordas:** é borda (255) onde a magnitude do gradiente passa do
+  limiar; o resto fica preto (0).
+  - **Roberts:** máscaras 2x2 nas diagonais, `G1 = f(x,y) − f(x+1,y+1)` e
+    `G2 = f(x+1,y) − f(x,y+1)`; borda onde `√(G1² + G2²) > limiar`. A última
+    linha e a última coluna ficam pretas.
+  - **Sobel:** máscaras 3x3 `Sx` e `Sy`; borda onde `√(Gx² + Gy²) > limiar`.
+    A moldura de 1 pixel fica preta.
