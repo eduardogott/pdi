@@ -83,21 +83,21 @@ pdi_rotacionar:
     mulsd xmm5, xmm6            ; cy = (altura-1)/2: linha central
 
     ; c = cx - cos*cx - sen*cy: faz o centro do destino buscar o centro da origem
-    movapd xmm0, xmm1           ; copia cos
+    movapd xmm0, xmm1           ; trabalha numa cópia de cos: xmm1 ainda vai para a matriz
     mulsd xmm0, xmm4            ; xmm0 = cos*cx
     movapd xmm7, xmm4           ; parte de cx
     subsd xmm7, xmm0            ; xmm7 = cx - cos*cx
-    movapd xmm0, xmm2           ; copia sen
+    movapd xmm0, xmm2           ; cópia de sen, preservando o valor original em xmm2
     mulsd xmm0, xmm5            ; xmm0 = sen*cy
     subsd xmm7, xmm0            ; xmm7 = cx - cos*cx - sen*cy
     movsd [rsp+32], xmm7        ; grava c na matriz
 
     ; f = cy + sen*cx - cos*cy
-    movapd xmm0, xmm2           ; copia sen
+    movapd xmm0, xmm2           ; cópia de sen (mulsd sobrescreve o destino)
     mulsd xmm0, xmm4            ; xmm0 = sen*cx
     movapd xmm7, xmm5           ; parte de cy
     addsd xmm7, xmm0            ; xmm7 = cy + sen*cx
-    movapd xmm0, xmm1           ; copia cos
+    movapd xmm0, xmm1           ; cópia de cos (mulsd sobrescreve o destino)
     mulsd xmm0, xmm5            ; xmm0 = cos*cy
     subsd xmm7, xmm0            ; xmm7 = cy + sen*cx - cos*cy
     movsd [rsp+56], xmm7        ; grava f na matriz

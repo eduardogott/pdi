@@ -54,7 +54,7 @@ pdi_diminuir:
     mov   r10d, [rsp+8]         ; lê altura_dst (7º argumento) antes de mexer na pilha
     sub   rsp, 72               ; reserva espaço para os argumentos e a matriz
     movapd xmm1, xmm0           ; s = fator: cada pixel do destino anda 'fator' pixels na origem
-    movapd xmm2, xmm1           ; copia s
+    movapd xmm2, xmm1           ; parte de s numa cópia: xmm1 (= s) ainda vira a e e na matriz
     subsd xmm2, [UM]            ; xmm2 = s - 1
     mulsd xmm2, [MEIO]          ; xmm2 = (s - 1) / 2: ajuste que pega o centro do bloco
     xorpd xmm3, xmm3            ; xmm3 = 0.0 (xor de um valor com ele mesmo zera todos os bits)

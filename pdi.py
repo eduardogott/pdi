@@ -58,6 +58,47 @@ _rotacionar = _declarar("pdi_rotacionar", _DOUBLE)
 _espelhar = _declarar("pdi_espelhar", _INT)
 _aumentar = _declarar("pdi_aumentar", _INT, _INT, _DOUBLE)
 _diminuir = _declarar("pdi_diminuir", _INT, _INT, _DOUBLE)
+_negativo = _declarar("pdi_negativo")
+_dilatacao = _declarar("pdi_dilatacao", _INT)
+_erosao = _declarar("pdi_erosao", _INT)
+_abertura = _declarar("pdi_abertura", _INT)
+_fechamento = _declarar("pdi_fechamento", _INT)
+_afinamento = _declarar("pdi_afinamento")
+_ferrugem = _declarar("pdi_ferrugem")
+
+_I32P = ctypes.POINTER(ctypes.c_int32)
+
+
+class Medida(ctypes.Structure):
+    """Medidas de um objeto rotulado (a struct Medida de caracteristicas/medidas.asm)."""
+
+    _fields_ = [("area", ctypes.c_int64), ("perimetro", ctypes.c_double),
+                ("soma_x", ctypes.c_int64), ("soma_y", ctypes.c_int64),
+                ("x_min", ctypes.c_int64), ("y_min", ctypes.c_int64),
+                ("x_max", ctypes.c_int64), ("y_max", ctypes.c_int64)]
+
+    @property
+    def centro(self):
+        return self.soma_x / self.area, self.soma_y / self.area
+
+    @property
+    def largura(self):
+        return self.x_max - self.x_min + 1
+
+    @property
+    def altura(self):
+        return self.y_max - self.y_min + 1
+
+
+_rotular = _lib.pdi_rotular
+_rotular.argtypes = [_U8P, _INT, _INT, _I32P]
+_rotular.restype = _INT
+_medir = _lib.pdi_medir
+_medir.argtypes = [_I32P, _INT, _INT, _INT, ctypes.POINTER(Medida)]
+_medir.restype = None
+_contorno_externo = _lib.pdi_contorno_externo
+_contorno_externo.argtypes = [_I32P, _INT, _INT, ctypes.POINTER(Medida), ctypes.POINTER(_DOUBLE)]
+_contorno_externo.restype = None
 
 
 def _endereco(buffer):
@@ -109,6 +150,10 @@ def passa_alta(img):
     return _executar(_passa_alta, img, img.canais)
 
 
+def negativo(img):
+    return _executar(_negativo, img, img.canais)
+
+
 def roberts(img, limiar):
     return _executar(_roberts, img, 1, limiar)
 
@@ -143,3 +188,59 @@ def diminuir(img, fator):
     altura = max(1, round(img.altura / fator))
     return _executar(_diminuir, img, img.canais, largura, altura, fator,
                      largura=largura, altura=altura)
+
+
+# ------------------------------------------------------- morfologia matemática
+
+def dilatacao(img, valor):
+    return _executar(_dilatacao, img, img.canais, valor)
+
+
+def erosao(img, valor):
+    return _executar(_erosao, img, img.canais, valor)
+
+
+def abertura(img, valor):
+    return _executar(_abertura, img, img.canais, valor)
+
+
+def fechamento(img, valor):
+    return _executar(_fechamento, img, img.canais, valor)
+
+
+def afinamento(img):
+    return _executar(_afinamento, img, 1)
+
+
+# ------------------------------------------------ extração de características
+
+def rotular(img):
+    """Rotula os objetos (pixels != 0) de uma imagem de 1 canal.
+
+    Devolve (rótulos, n): um int32 por pixel (0 = fundo, 1..n = objeto)."""
+    if img.canais != 1:
+        raise ValueError("a rotulação recebe uma imagem binária de 1 canal")
+    rotulos = (ctypes.c_int32 * (img.largura * img.altura))()
+    n = _rotular(_endereco(img.dados), img.largura, img.altura, rotulos)
+    if n < 0:
+        raise MemoryError("sem memória para a rotulação")
+    return rotulos, n
+
+
+def ferrugem(img):
+    """Classifica cada pixel pela cor: 0 = fundo, 128 = folha sadia, 255 = ferrugem."""
+    return _executar(_ferrugem, img, 1)
+
+
+def medir(rotulos, largura, altura, n):
+    """Área, perímetro, centroide e caixa de cada rótulo; o índice 0 é o fundo."""
+    medidas = (Medida * (n + 1))()
+    _medir(rotulos, largura, altura, n, medidas)
+    return medidas
+
+
+def contorno_externo(rotulos, largura, rotulo, medida):
+    """(área, perímetro) da silhueta externa do objeto: ignora furos e falhas internas."""
+    saida = (_DOUBLE * 2)()
+    _contorno_externo(rotulos, largura, rotulo, ctypes.byref(medida), saida)
+    return saida[0], saida[1]

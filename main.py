@@ -5,16 +5,18 @@ main.py - Processamento Digital de Imagens (trabalho da disciplina)
 Interface em Python/Tkinter: menus, as duas janelas (imagem original e
 imagem transformada) e os diálogos. Toda transformação de imagem é feita em
 assembly (pasta asm/, biblioteca lib/libpdi.so), chamada pelo módulo pdi.py.
+Os exercícios do desafio final (menu Exercícios) estão em desafios.py.
 Abrir e salvar arquivos usa a biblioteca Pillow.
 
 Uso:  python3 main.py
 """
 
 import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image as ImagemPIL
 
+import desafios
 import pdi
 
 AUTORES = [("Eduardo Gottert", "eduardo@gttr.com.br")]
@@ -66,6 +68,32 @@ class Painel(tk.LabelFrame):
         self.update_idletasks()
         self.foto = para_tela(img, self.tela.winfo_width(), self.tela.winfo_height())
         self.tela.configure(image=self.foto)
+
+
+class JanelaResultado(tk.Toplevel):
+    """Janela com o resumo e a tabela de resultados de um exercício."""
+
+    def __init__(self, mestre, titulo, resultado):
+        super().__init__(mestre)
+        self.title(titulo)
+        # cada coluna com a largura do texto mais comprido (cerca de 8 pixels por letra)
+        larguras = [20 + 8 * max(len(str(texto)) for texto in [coluna] + [l[k] for l in resultado.linhas])
+                    for k, coluna in enumerate(resultado.colunas)]
+        self.geometry(f"{max(480, min(1100, sum(larguras) + 40))}x400")
+        tk.Label(self, text=resultado.resumo, font=("DejaVu Sans", 11, "bold"),
+                 wraplength=max(440, sum(larguras)), justify="left").pack(anchor="w", padx=10, pady=(10, 6))
+        quadro = tk.Frame(self)
+        quadro.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+        tabela = ttk.Treeview(quadro, columns=resultado.colunas, show="headings")
+        for coluna, largura in zip(resultado.colunas, larguras):
+            tabela.heading(coluna, text=coluna)
+            tabela.column(coluna, anchor="center", width=largura)
+        for linha in resultado.linhas:
+            tabela.insert("", "end", values=linha)
+        rolagem = ttk.Scrollbar(quadro, orient="vertical", command=tabela.yview)
+        tabela.configure(yscrollcommand=rolagem.set)
+        tabela.pack(side="left", fill="both", expand=True)
+        rolagem.pack(side="right", fill="y")
 
 
 class Aplicacao:
@@ -125,6 +153,7 @@ class Aplicacao:
         ])
         menu("Filtros", [
             ("Grayscale", lambda: aplicar(pdi.grayscale)),
+            ("Negativo", lambda: aplicar(pdi.negativo)),
             ("Brilho e Contraste...", lambda: aplicar(
                 pdi.brilho_contraste,
                 (REAL, "Contraste C (1 = sem alteração):", 0, 10),
@@ -140,10 +169,18 @@ class Aplicacao:
             ("Detecção de Bordas (Sobel)...", lambda: aplicar(
                 pdi.sobel, (INTEIRO, "Limiar (é borda se G > limiar):", 0, 1500))),
         ])
+        elemento = (INTEIRO, "Valor do elemento estruturante em cruz 3x3\n"
+                             "(0 para imagens binárias):", 0, 255)
         menu("Morfologia Matemática", [
-            (nome, self.nao_implementado)
-            for nome in ("Dilatação", "Erosão", "Abertura", "Fechamento", "Afinamento")])
-        menu("Extração de Características", [("Desafio", self.nao_implementado)])
+            ("Dilatação...", lambda: aplicar(pdi.dilatacao, elemento)),
+            ("Erosão...", lambda: aplicar(pdi.erosao, elemento)),
+            ("Abertura...", lambda: aplicar(pdi.abertura, elemento)),
+            ("Fechamento...", lambda: aplicar(pdi.fechamento, elemento)),
+            ("Afinamento (Zhang-Suen)", lambda: aplicar(pdi.afinamento)),
+        ])
+        menu("Exercícios", [
+            (rotulo, lambda r=rotulo, f=exercicio: self.exercicio(r, f))
+            for rotulo, exercicio in desafios.EXERCICIOS])
 
     # ------------------------------------------------------------ técnicas
     def tem_imagem(self):
@@ -166,8 +203,18 @@ class Aplicacao:
         self.resultado = funcao(self.resultado, *valores)
         self.painel_resultado.mostrar(self.resultado)
 
-    def nao_implementado(self):
-        messagebox.showinfo(TITULO, "Técnica ainda não implementada (próximas entregas).")
+    def exercicio(self, titulo, funcao):
+        """Roda um exercício sobre a imagem original e mostra a imagem e a tabela."""
+        if not self.tem_imagem():
+            return
+        try:
+            resultado = funcao(self.original)
+        except ValueError as erro:
+            messagebox.showerror(TITULO, str(erro))
+            return
+        self.resultado = resultado.imagem
+        self.painel_resultado.mostrar(self.resultado)
+        JanelaResultado(self.raiz, titulo, resultado)
 
     # ------------------------------------------------------------ arquivo
     def abrir(self):

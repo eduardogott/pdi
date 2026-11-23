@@ -55,7 +55,7 @@ pdi_aumentar:
     sub   rsp, 72               ; reserva espaço para os argumentos e a matriz
     movsd xmm1, [UM]            ; xmm1 = 1.0
     divsd xmm1, xmm0            ; s = 1 / fator: cada pixel da origem cobre 'fator' pixels do destino
-    movapd xmm2, xmm1           ; copia s
+    movapd xmm2, xmm1           ; parte de s numa cópia: xmm1 (= s) ainda vira a e e na matriz
     subsd xmm2, [UM]            ; xmm2 = s - 1
     mulsd xmm2, [MEIO]          ; xmm2 = (s - 1) / 2: ajuste que centraliza os blocos
     xorpd xmm3, xmm3            ; xmm3 = 0.0 (xor de um valor com ele mesmo zera todos os bits)
