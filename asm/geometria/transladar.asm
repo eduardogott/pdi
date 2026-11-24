@@ -57,7 +57,7 @@ pdi_transladar:
     sub   rsp, 72               ; reserva espaço para os argumentos e a matriz
     neg   r9                    ; -tx: para achar a origem, anda no sentido contrário
     neg   r10                   ; -ty
-    movsd xmm0, [UM]            ; carrega 1.0
+    movsd xmm0, [UM]            ; xmm0 = 1.0, a diagonal da matriz (translação não muda a escala)
     xorpd xmm1, xmm1            ; xmm1 = 0.0 (xor de um valor com ele mesmo zera todos os bits)
     movsd [rsp+16], xmm0        ; a = 1: xo acompanha x
     movsd [rsp+24], xmm1        ; b = 0: xo não depende de y

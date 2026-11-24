@@ -52,7 +52,7 @@ extern pdi_transformar          ; suporte/matriz_transformacao.asm
 
 pdi_espelhar:
     sub   rsp, 72               ; reserva espaço para os argumentos e a matriz (alinhado em 16)
-    movsd xmm0, [UM]            ; carrega 1.0
+    movsd xmm0, [UM]            ; xmm0 = 1.0, para começar pela matriz identidade
     xorpd xmm1, xmm1            ; xmm1 = 0.0 (xor de um valor com ele mesmo zera todos os bits)
     movsd [rsp+16], xmm0        ; começa com a identidade: a = 1
     movsd [rsp+24], xmm1        ; b = 0

@@ -97,10 +97,10 @@ pdi_transformar:
     cmp   r12, r10              ; verifica se ainda há linhas no destino
     jae   .fim                  ; passou da última linha: terminou
     cvtsi2sd xmm0, r12          ; converte y para double para usar na matriz
-    movapd xmm1, xmm9           ; copia b
+    movapd xmm1, xmm9           ; cópia de b: o original fica em xmm9 para as próximas linhas
     mulsd xmm1, xmm0            ; xmm1 = b*y
     addsd xmm1, xmm10           ; xmm1 = b*y + c: parte de xo que não muda na linha
-    movapd xmm2, xmm12          ; copia e
+    movapd xmm2, xmm12          ; cópia de e, pelo mesmo motivo
     mulsd xmm2, xmm0            ; xmm2 = e*y
     addsd xmm2, xmm13           ; xmm2 = e*y + f: parte de yo que não muda na linha
     xor   r13d, r13d            ; começa pela coluna x = 0
@@ -108,10 +108,10 @@ pdi_transformar:
     cmp   r13, r9               ; verifica se ainda há colunas nesta linha
     jae   .proxima_linha        ; passou da última coluna: vai para a próxima linha
     cvtsi2sd xmm0, r13          ; converte x para double
-    movapd xmm3, xmm8           ; copia a
+    movapd xmm3, xmm8           ; cópia de a: o original fica em xmm8 para os próximos pixels
     mulsd xmm3, xmm0            ; xmm3 = a*x
     addsd xmm3, xmm1            ; xo = a*x + b*y + c: coluna de origem deste pixel
-    movapd xmm4, xmm11          ; copia d
+    movapd xmm4, xmm11          ; cópia de d, pelo mesmo motivo
     mulsd xmm4, xmm0            ; xmm4 = d*x
     addsd xmm4, xmm2            ; yo = d*x + e*y + f: linha de origem deste pixel
     cvtsd2si r14, xmm3          ; arredonda xo: escolhe o vizinho mais próximo
